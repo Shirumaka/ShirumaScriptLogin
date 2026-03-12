@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Auth - Modern UI</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --input-bg: rgba(15, 23, 42, 0.6);
+      --text: #f8fafc;
+      --google: #ea4335;
+      --github: #24292f;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg-gradient);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .bg-blur {
+      position: absolute;
+      width: 40vw; height: 40vw;
+      background: var(--primary);
+      filter: blur(150px);
+      border-radius: 50%;
+      z-index: -1;
+      opacity: 0.2;
+      top: 10%; left: 20%;
+    }
+
+    .login-card {
+      max-width: 400px;
+      width: 90%;
+      padding: 2.5rem;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 1.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    h2 { margin: 0 0 2rem; text-align: center; font-size: 1.8rem; }
+
+    .textbox { position: relative; margin-bottom: 1.2rem; }
+    .textbox .icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); opacity: 0.6; pointer-events: none; }
+    
+    .textbox input {
+      width: 100%;
+      padding: 1.2rem 1rem 0.5rem 3rem;
+      background: var(--input-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.8rem;
+      color: #fff;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: all 0.3s;
+    }
+
+    .textbox label {
+      position: absolute;
+      left: 3rem; top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      transition: all 0.2s;
+      pointer-events: none;
+    }
+
+    .textbox input:focus + label,
+    .textbox input:not(:placeholder-shown) + label {
+      transform: translateY(-1.8rem) scale(0.8);
+      left: 1rem;
+      color: var(--primary);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.8rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s;
+      margin-bottom: 0.8rem;
+      color: white;
+    }
+
+    .btn-primary { background: var(--primary); }
+    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+    .btn-google { background: var(--google); }
+    .btn-github { background: var(--github); }
+    .btn-google:hover, .btn-github:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .divider {
+      display: flex; align-items: center;
+      margin: 1.5rem 0;
+      color: #64748b; font-size: 0.8rem;
+    }
+    .divider::before, .divider::after {
+      content: ""; flex: 1; height: 1px;
+      background: rgba(255,255,255,0.1); margin: 0 10px;
+    }
+
+    .shake { animation: shake 0.4s both; }
+    @keyframes shake {
+      10%, 90% { transform: translateX(-1px); }
+      20%, 80% { transform: translateX(2px); }
+      30%, 50%, 70% { transform: translateX(-4px); }
+      40%, 60% { transform: translateX(4px); }
+    }
+
+    /* ログイン後の表示用 */
+    #user-info { display: none; text-align: center; }
+    .avatar { width: 64px; height: 64px; border-radius: 50%; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div class="bg-blur"></div>
+
+  <div class="login-card" id="login-card">
+    <div id="auth-container">
+      <h2 id="card-title">Welcome Back</h2>
+      <form id="auth-form">
+        <div class="textbox">
+          <span class="icon">📧</span>
+          <input type="email" id="email" placeholder=" " required />
+          <label>Email Address</label>
+        </div>
+        <div class="textbox">
+          <span class="icon">🔒</span>
+          <input type="password" id="password" placeholder=" " required />
+          <label>Password</label>
+        </div>
+        <button type="submit" class="btn btn-primary" id="submit-btn">Sign In</button>
+      </form>
+
+      <div class="divider">OR CONTINUE WITH</div>
+
+      <button type="button" class="btn btn-google" id="google-btn">
+        Googleでログイン
+      </button>
+      <button type="button" class="btn btn-github" id="github-btn">
+        GitHubでログイン
+      </button>
+
+      <p style="text-align:center; margin-top:1.5rem; font-size: 0.9rem;">
+        <a href="#" id="toggle-mode" style="color:var(--primary); text-decoration:none;">アカウントを作成</a>
+      </p>
+    </div>
+
+    <div id="user-info">
+      <h2>Logged In!</h2>
+      <img id="user-photo" class="avatar" src="" alt="">
+      <p id="user-name"></p>
+      <p id="user-email" style="opacity: 0.7; font-size: 0.8rem;"></p>
+      <button class="btn" style="background: #334155; margin-top: 1rem;" id="logout-btn">Sign Out</button>
+    </div>
+  </div>
+
+  <script type="module">
+    // Firebase SDKのインポート
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword, 
+      createUserWithEmailAndPassword,
+      GoogleAuthProvider,
+      GithubAuthProvider,
+      signInWithPopup,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    // --- 【重要】ここに自分のFirebase Configを貼り付けてください ---
+    const firebaseConfig = {
+    apiKey: "AIzaSyAqy2H40wFYd86zbFmPurvI8SsV1-x8luU",
+    authDomain: "flutter-ai-playground-96c40.firebaseapp.com",
+    projectId: "flutter-ai-playground-96c40",
+    storageBucket: "flutter-ai-playground-96c40.firebasestorage.app",
+    messagingSenderId: "1063688315774",
+    appId: "1:1063688315774:web:1e5d77f259203c56b4c92f"
+    };
+
+
+    // Firebaseの初期化
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const googleProvider = new GoogleAuthProvider();
+    const githubProvider = new GithubAuthProvider();
+
+    const loginCard = document.getElementById('login-card');
+    const authContainer = document.getElementById('auth-container');
+    const userInfo = document.getElementById('user-info');
+    let isRegisterMode = false;
+
+    // モード切り替え (ログイン <-> 登録)
+    document.getElementById('toggle-mode').onclick = (e) => {
+      e.preventDefault();
+      isRegisterMode = !isRegisterMode;
+      document.getElementById('card-title').textContent = isRegisterMode ? 'Create Account' : 'Welcome Back';
+      document.getElementById('submit-btn').textContent = isRegisterMode ? 'Register' : 'Sign In';
+      e.target.textContent = isRegisterMode ? 'ログインに戻る' : 'アカウントを作成';
+    };
+
+    // 状態監視: ログインしているかどうかで表示を切り替え
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        authContainer.style.display = 'none';
+        userInfo.style.display = 'block';
+        document.getElementById('user-name').textContent = user.displayName || "User";
+        document.getElementById('user-email').textContent = user.email;
+        document.getElementById('user-photo').src = user.photoURL || "https://via.placeholder.com/64";
+      } else {
+        authContainer.style.display = 'block';
+        userInfo.style.display = 'none';
+      }
+    });
+
+    // フォーム送信（メール・パスワード）
+    document.getElementById('auth-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        if (isRegisterMode) {
+          await createUserWithEmailAndPassword(auth, email, password);
+        } else {
+          await signInWithEmailAndPassword(auth, email, password);
+        }
+      } catch (err) {
+        showError(err.message);
+      }
+    };
+
+    // SNSログイン処理
+    document.getElementById('google-btn').onclick = () => signInSNS(googleProvider);
+    document.getElementById('github-btn').onclick = () => signInSNS(githubProvider);
+
+    async function signInSNS(provider) {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    // ログアウト
+    document.getElementById('logout-btn').onclick = () => signOut(auth);
+
+    // エラー時のアニメーション
+    function showError(msg) {
+      console.error(msg);
+      loginCard.classList.remove('shake');
+      void loginCard.offsetWidth;
+      loginCard.classList.add('shake');
+      alert("Error: " + msg);
+    }
+  </script>
+</body>
+</html>
