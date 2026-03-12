@@ -124,7 +124,6 @@
       40%, 60% { transform: translateX(4px); }
     }
 
-    /* ログイン後の表示用 */
     #user-info { display: none; text-align: center; }
     .avatar { width: 64px; height: 64px; border-radius: 50%; margin-bottom: 10px; }
   </style>
@@ -139,17 +138,17 @@
         <div class="textbox">
           <span class="icon">📧</span>
           <input type="email" id="email" placeholder=" " required />
-          <label>Email Address</label>
+          <label>メールアドレス 'E-mailのみ'</label>
         </div>
         <div class="textbox">
           <span class="icon">🔒</span>
           <input type="password" id="password" placeholder=" " required />
-          <label>Password</label>
+          <label>パスワード</label>
         </div>
         <button type="submit" class="btn btn-primary" id="submit-btn">Sign In</button>
       </form>
 
-      <div class="divider">OR CONTINUE WITH</div>
+      <div class="divider">または次の手順で続行</div>
 
       <button type="button" class="btn btn-google" id="google-btn">
         Googleでログイン
@@ -164,16 +163,19 @@
     </div>
 
     <div id="user-info">
-      <h2>Logged In!</h2>
+      <h2>ログインしました!</h2>
       <img id="user-photo" class="avatar" src="" alt="">
       <p id="user-name"></p>
       <p id="user-email" style="opacity: 0.7; font-size: 0.8rem;"></p>
-      <button class="btn" style="background: #334155; margin-top: 1rem;" id="logout-btn">Sign Out</button>
+      
+      <a href="https://example.com" target="_blank" class="btn btn-primary" style="text-decoration: none; margin-top: 1.5rem;">
+        メインサイトへ行く
+      </a>
+      <button class="btn" style="background: #334155; margin-top: 0.5rem;" id="logout-btn">Sign Out</button>
     </div>
   </div>
 
   <script type="module">
-    // Firebase SDKのインポート
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { 
       getAuth, 
@@ -186,7 +188,6 @@
       signOut
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // --- 【重要】ここに自分のFirebase Configを貼り付けてください ---
     const firebaseConfig = {
     apiKey: "AIzaSyAqy2H40wFYd86zbFmPurvI8SsV1-x8luU",
     authDomain: "flutter-ai-playground-96c40.firebaseapp.com",
@@ -196,8 +197,6 @@
     appId: "1:1063688315774:web:1e5d77f259203c56b4c92f"
     };
 
-
-    // Firebaseの初期化
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const googleProvider = new GoogleAuthProvider();
@@ -208,16 +207,14 @@
     const userInfo = document.getElementById('user-info');
     let isRegisterMode = false;
 
-    // モード切り替え (ログイン <-> 登録)
     document.getElementById('toggle-mode').onclick = (e) => {
       e.preventDefault();
       isRegisterMode = !isRegisterMode;
-      document.getElementById('card-title').textContent = isRegisterMode ? 'Create Account' : 'Welcome Back';
-      document.getElementById('submit-btn').textContent = isRegisterMode ? 'Register' : 'Sign In';
+      document.getElementById('card-title').textContent = isRegisterMode ? 'アカウントを作成' : 'Welcome Back';
+      document.getElementById('submit-btn').textContent = isRegisterMode ? '作成' : 'ログイン';
       e.target.textContent = isRegisterMode ? 'ログインに戻る' : 'アカウントを作成';
     };
 
-    // 状態監視: ログインしているかどうかで表示を切り替え
     onAuthStateChanged(auth, (user) => {
       if (user) {
         authContainer.style.display = 'none';
@@ -231,7 +228,6 @@
       }
     });
 
-    // フォーム送信（メール・パスワード）
     document.getElementById('auth-form').onsubmit = async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
@@ -248,7 +244,6 @@
       }
     };
 
-    // SNSログイン処理
     document.getElementById('google-btn').onclick = () => signInSNS(googleProvider);
     document.getElementById('github-btn').onclick = () => signInSNS(githubProvider);
 
@@ -260,10 +255,8 @@
       }
     }
 
-    // ログアウト
     document.getElementById('logout-btn').onclick = () => signOut(auth);
 
-    // エラー時のアニメーション
     function showError(msg) {
       console.error(msg);
       loginCard.classList.remove('shake');
@@ -274,3 +267,4 @@
   </script>
 </body>
 </html>
+
